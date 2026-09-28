@@ -1,4 +1,5 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body><title>Silver Desk</title>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Silver Desk</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Figtree:wght@400;500;600&family=Noto+Sans+Gujarati:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
@@ -7,6 +8,7 @@
   --bg:#EDF0F3; --surface:#FFFFFF; --surface2:#F5F7F9; --ink:#141B22; --muted:#5A6673; --line:#D6DCE2;
   --accent:#3D5A80; --accent-soft:#E1E8F1;
   --buy:#1E8456; --buy-soft:#E1F2E9; --sell:#C23E37; --sell-soft:#F8E4E2; --warn:#A86F16; --warn-soft:#F6ECD9;
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a;
   --display:"Sora","Noto Sans Gujarati",system-ui,sans-serif;
   --body:"Figtree","Noto Sans Gujarati",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
@@ -17,6 +19,7 @@
     --bg:#0E1318; --surface:#161D24; --surface2:#1B242D; --ink:#E6EBF0; --muted:#93A0AD; --line:#27313B;
     --accent:#8FB3DE; --accent-soft:#1F2C3B;
     --buy:#4CC38A; --buy-soft:#15302A; --sell:#F07167; --sell-soft:#3A1D1D; --warn:#E0A84A; --warn-soft:#352914;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70;
   }
 }
 :root[data-theme="dark"]{
@@ -24,8 +27,11 @@
   --bg:#0E1318; --surface:#161D24; --surface2:#1B242D; --ink:#E6EBF0; --muted:#93A0AD; --line:#27313B;
   --accent:#8FB3DE; --accent-soft:#1F2C3B;
   --buy:#4CC38A; --buy-soft:#15302A; --sell:#F07167; --sell-soft:#3A1D1D; --warn:#E0A84A; --warn-soft:#352914;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;padding:20px 16px 48px}
 .wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
 h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
@@ -150,6 +156,21 @@ select{font-family:var(--mono);font-size:13px;padding:5px 8px;border-radius:6px;
 .scroll{overflow-x:auto}
 details summary{cursor:pointer;font-weight:600;font-size:13.5px}
 .inputs3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+.ygrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:16px}
+.ycol{display:flex;flex-direction:column;gap:10px;min-width:0}
+.ychart{position:relative;height:210px}
+.ychart svg{display:block;width:100%;height:100%}
+.ytip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font-size:12px;box-shadow:0 4px 16px rgba(0,0,0,.12);white-space:nowrap}
+.ylegend{display:inline-flex;gap:10px}
+.ylegend i{display:inline-block;width:14px;height:2px;border-radius:1px;vertical-align:middle;margin-right:4px}
+.bp{font-family:var(--mono);font-variant-numeric:tabular-nums}
+#yTable td:first-child,#yTable th{white-space:nowrap}
+@media (max-width:480px){#yTable td,#yTable th{padding:6px 3px;font-size:12px}}
+@media (max-width:860px){ .ygrid{grid-template-columns:1fr} }
+.modal{position:fixed;inset:0;background:rgba(8,12,16,.6);display:flex;align-items:center;justify-content:center;padding:16px;z-index:100}
+.modal-box{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:20px;max-width:440px;width:100%;display:flex;flex-direction:column;gap:10px;max-height:calc(100% - 32px);overflow:auto}
+.modal-box p,.modal-box ul{margin:0;font-size:14px}
+.modal-box ul{padding-left:18px;display:flex;flex-direction:column;gap:6px}
 footer{font-size:12px;color:var(--muted);text-align:left;max-width:70ch}
 .note{font-size:12.5px;background:var(--accent-soft);color:var(--ink);border-radius:8px;padding:8px 10px}
 
@@ -170,12 +191,17 @@ footer{font-size:12px;color:var(--muted);text-align:left;max-width:70ch}
 </style>
 
 <div class="wrap">
+  <div id="jsWarn" class="note" style="background:var(--sell-soft);color:var(--ink);font-size:14px;line-height:1.6">
+    <b style="color:var(--sell)">⚠ App અહીં ચાલુ નથી થઈ શકતી.</b><br>
+    તમે file એવી જગ્યાએ ખોલી છે જે app ચલાવી શકતી નથી (Claude નું preview, અથવા phone નું HTML viewer).<br>
+    <b>ઉપાય:</b> phone ના <b>Files</b> app → <b>Downloads</b> → file ને <b>લાંબું દબાવો</b> → <b>Open with</b> → <b>Chrome</b>.
+  </div>
   <header>
     <div class="brand">
       <div class="ingot" aria-hidden="true"></div>
       <div>
         <h1>Silver Desk</h1>
-        <div class="small muted">MCX Silver + XAG/USD · પોતાનો prediction dashboard</div>
+        <div class="small muted">MCX Silver + XAG/USD · Silver prediction dashboard</div>
       </div>
     </div>
     <div class="row">
@@ -288,6 +314,44 @@ footer{font-size:12px;color:var(--muted);text-align:left;max-width:70ch}
     </div>
   </section>
 
+  <!-- US BOND YIELDS -->
+  <section class="card" aria-labelledby="ydH">
+    <div class="row between">
+      <h2 id="ydH">US Bond Yields: 5Y · 10Y · 30Y</h2>
+      <span class="stamp" id="ySignal">—</span>
+    </div>
+    <div class="ygrid">
+      <div class="ycol">
+        <div class="scroll"><table id="yTable"></table></div>
+        <div class="small muted">bp = basis point. 100 bp = 1%. 10 bp = 0.10%.</div>
+        <details>
+          <summary>આજના yields જાતે નાખો (live)</summary>
+          <div class="small muted" style="margin-top:6px">Investing.com, CNBC કે Google પર "US 10 year yield" શોધીને ભાવ નાખો. ફેરફાર છેલ્લા close સામે ગણાશે.</div>
+          <div class="inputs3">
+            <div class="field"><label for="yIn5">5Y (%)</label><input id="yIn5" type="number" step="0.01"></div>
+            <div class="field"><label for="yIn10">10Y (%)</label><input id="yIn10" type="number" step="0.01"></div>
+            <div class="field"><label for="yIn30">30Y (%)</label><input id="yIn30" type="number" step="0.01"></div>
+          </div>
+          <div class="row" style="margin-top:8px;gap:8px"><button type="button" class="primary" id="yApply">Yields update કરો</button><button type="button" id="yClear">છેલ્લા close પર પાછા</button></div>
+        </details>
+      </div>
+      <div class="ycol">
+        <div class="row between small muted"><span>September ના yields (%)</span><span id="yLegend" class="ylegend"></span></div>
+        <div class="ychart" id="yChart"></div>
+      </div>
+    </div>
+    <div class="grid" style="gap:12px">
+      <div class="plan-box">
+        <div class="label">Yield curve</div>
+        <div id="yCurve" class="small"></div>
+      </div>
+      <div class="plan-box">
+        <div class="label">Silver પર અસર કેવી રીતે</div>
+        <ul class="reasons small" id="yHow"></ul>
+      </div>
+    </div>
+  </section>
+
   <!-- IMPACT + DRIVERS -->
   <section class="grid">
     <div class="card" aria-labelledby="imH">
@@ -325,6 +389,20 @@ footer{font-size:12px;color:var(--muted);text-align:left;max-width:70ch}
   </section>
 
   <div class="toasts" id="toasts" aria-live="polite"></div>
+  <div class="modal" id="disc" hidden role="dialog" aria-modal="true" aria-labelledby="discH">
+    <div class="modal-box">
+      <h2 id="discH">શરૂ કરતાં પહેલાં</h2>
+      <p>Silver Desk એક <b>શૈક્ષણિક અને ગણતરીનું tool</b> છે. એ pivot levels, currency ગણતરી અને news ના આધારે અંદાજ બતાવે છે.</p>
+      <ul>
+        <li>આ <b>investment advice નથી</b> અને SEBI registered સલાહ પણ નથી.</li>
+        <li>ભાવ free public sources પરથી આવે છે. એમાં મોડું કે ભૂલ હોઈ શકે. Trade પહેલાં broker નો ભાવ જરૂર તપાસો.</li>
+        <li>Commodity trading માં મોટું નુકસાન થઈ શકે છે. દરેક નિર્ણય તમારી પોતાની જવાબદારી છે.</li>
+      </ul>
+      <p class="small muted">Silver Desk is an educational calculator, not investment advice. Prices may be delayed or inaccurate.</p>
+      <button type="button" class="primary" id="discOk">સમજાયું, આગળ વધો</button>
+      <a class="small" href="privacy.html" id="privLink" style="color:var(--accent)">Privacy policy</a>
+    </div>
+  </div>
   <footer>
     Live ભાવ: XAG/USD gold-api.com પરથી દર 30 સેકન્ડે, USD/INR open.er-api.com પરથી (દિવસમાં એક વાર બદલાય; broker નો ભાવ નાખશો તો એ જ વપરાશે). આ tool technical pivots અને news-based scoring થી અંદાજ આપે છે, ગેરંટી નહીં. Levels ₹ માં ફેરવવા XAG × USD/INR × 32.1507 × premium factor વપરાય છે; premium factor (duty + futures premium) તમારા નાખેલા MCX ભાવ પરથી આપમેળે ગોઠવાય છે. Trading નો નિર્ણય તમારો પોતાનો.
   </footer>
@@ -332,11 +410,12 @@ footer{font-size:12px;color:var(--muted);text-align:left;max-width:70ch}
 
 <script>
 (function(){
+{ const w = document.getElementById("jsWarn"); if (w) w.hidden = true; }
 const OZ = 32.1507; // troy oz per kg
 
 // Embedded snapshot (Fri 25 Sep 2026 close). Replaced by the db document when one exists.
 const SNAPSHOT = {
-  updatedAt: "2026-09-26T15:55:00+05:30",
+  updatedAt: "2026-09-27T12:15:00+05:30",
   asOfLabel: "શુક્ર 25 Sep close",
   xag: 64.26, inr: 95.80, mcx: 233850, mcxContract: "Dec 2026",
   day:  { h: 64.60, l: 63.60, c: 64.26 },
@@ -350,7 +429,7 @@ const SNAPSHOT = {
   ],
   drivers: [
     { key: "fed", name: "Fed policy", score: -2, note: "Sep 16 એ 25bp hike. Williams, Paulson જેવા officials વર્ષના અંત પહેલાં વધુ એક hike ની વાત કરે છે. October hike ની શક્યતા ~67%." },
-    { key: "yields", name: "US 10Y yield", score: -1, note: "10Y yield ~5.2%, 2007 પછી સૌથી ઊંચી. વ્યાજ વગરની silver માટે નકારાત્મક." },
+    { key: "yields", name: "US bond yields (auto)", score: -1, note: "Score નીચેના Bond Yields વિભાગમાંથી આપમેળે આવે છે (5Y, 10Y, 30Y ના અઠવાડિયાના ફેરફાર પરથી). 10Y 5.17%, 30Y 5.49%: 2007 પછીની ઊંચી સપાટી." },
     { key: "dxy", name: "US Dollar (DXY)", score: -1, note: "DXY ~108.5, multi-year high. મજબૂત dollar એટલે XAG પર દબાણ." },
     { key: "inr", name: "Rupee (USD/INR)", score: 1, note: "USD/INR ~95.8–96.5. નબળો rupee MCX ભાવને ટેકો આપે છે, ભલે XAG નીચે હોય." },
     { key: "boj", name: "Bank of Japan", score: 0, note: "18 Sep એ BOJ એ rate 30+ વર્ષની ઊંચાઈએ વધાર્યો, Ueda વધુ hike નો સંકેત. પણ yen મજબૂત ન થયો, એટલે dollar પર ખાસ અસર નહીં." },
@@ -358,6 +437,7 @@ const SNAPSHOT = {
     { key: "phys", name: "Physical / industrial demand", score: 1, note: "$62–63 zone માં physical buyers સામાન્ય રીતે આવે છે. Solar/industrial demand નીચે ટેકો આપે." }
   ],
   news: [
+    { date: "25 Sep", effect: "bear", title: "30Y yield 5.49%, 10Y 5.17%: અઠવાડિયામાં +15 bp", note: "5Y yield 5% આસપાસ. Fed વધુ hike કરશે એવી અપેક્ષાથી yields ઊંચા, silver પર દબાણ." },
     { date: "25 Sep", effect: "bear", title: "Silver ~$64, અઠવાડિયામાં ~3.7% ઘટાડો", note: "Yields અને dollar મજબૂત, $64 ઉપર ટકી શકતું નથી." },
     { date: "23 Sep", effect: "bear", title: "Fed Chair Warsh નું hawkish guidance", note: "Rates હજુ inflation રોકવા પૂરતા ઊંચા નથી, એવો સંકેત. Silver $64 support તરફ." },
     { date: "18 Sep", effect: "mix", title: "BOJ એ rate વધાર્યો, વધુ hike ના સંકેત", note: "Yen માં ખાસ તેજી નહીં. Dollar નબળો થાય તો જ silver ને ફાયદો." },
@@ -372,6 +452,15 @@ const SNAPSHOT = {
     { when: "2026-10-02T18:00:00+05:30", label: "US Nonfarm Payrolls (Sep)", impact: "high" },
     { when: "2026-10-29T23:30:00+05:30", label: "FOMC decision (Oct 28–29)", impact: "high" }
   ],
+  yields: {
+    source: "US Treasury daily par yield curve",
+    y2: 4.81,
+    dates: ["1 Sep","2 Sep","3 Sep","4 Sep","8 Sep","9 Sep","10 Sep","11 Sep","14 Sep","15 Sep","16 Sep","17 Sep","18 Sep","21 Sep","22 Sep","23 Sep","24 Sep","25 Sep"],
+    y5:  [4.55,4.54,4.52,4.54,4.57,4.61,4.75,4.78,4.80,4.83,4.86,4.78,4.86,4.83,4.83,4.99,5.03,4.98],
+    y10: [4.79,4.79,4.77,4.78,4.80,4.83,4.95,4.96,4.97,5.00,5.01,4.94,5.01,4.96,4.96,5.11,5.18,5.17],
+    y30: [5.27,5.27,5.25,5.24,5.25,5.28,5.37,5.35,5.34,5.36,5.35,5.29,5.34,5.29,5.29,5.40,5.47,5.49],
+    watch: { y5: [4.80, 5.05], y10: [5.00, 5.20], y30: [5.35, 5.50] }
+  },
   eventsNote: "US CPI (Sep) October માં આવશે; BOJ ની આગલી બેઠક October ના અંતે.",
   summary: "Fed hawkish, yields અને dollar ઊંચા, એટલે trend નબળો. $62.2–62.3 તૂટે તો ઘટાડો ઝડપી થઈ શકે. PCE (30 Sep) અને NFP (2 Oct) સૌથી મોટા triggers."
 };
@@ -401,6 +490,8 @@ function loadLocal(){
   hlc = (h && h.base === data.updatedAt) ? (h.v || {}) : {};
   const d = store.get("drv");
   drvOverride = (d && d.base === data.updatedAt) ? (d.v || {}) : {};
+  const yl = store.get("ylive");
+  yLive = (yl && yl.base === data.updatedAt) ? (yl.v || {}) : {};
   tf = store.get("tf") || "day";
   unit = store.get("unit") || "inr";
 }
@@ -436,11 +527,174 @@ function scoreAll(c){
   const tech = items.reduce((a,b)=>a+b.s,0);
   let macro = 0;
   const drvItems = data.drivers.map(dr => {
-    const s = (dr.key in drvOverride) ? drvOverride[dr.key] : dr.score;
+    const s = drvScore(dr);
     macro += s;
     return { s, t: dr.name };
   });
   return { total: tech + macro, tech, macro, items, drvItems, pd, pw };
+}
+
+function drvScore(dr){
+  if (dr.key in drvOverride) return drvOverride[dr.key];
+  if (dr.key === "yields" && data.yields) return yieldsCalc().score;
+  return dr.score;
+}
+
+/* ---------------- BOND YIELDS ---------------- */
+let yLive = {};
+const TEN = [["y5","5Y","--s1"],["y10","10Y","--s2"],["y30","30Y","--s3"]];
+function yieldsCalc(){
+  const Y = data.yields, out = { rows: {}, dates: Y.dates.slice() };
+  const hasLive = TEN.some(([k]) => yLive[k] > 0);
+  if (hasLive) out.dates.push("આજે");
+  TEN.forEach(([k])=>{
+    const arr = Y[k].slice();
+    if (hasLive) arr.push(yLive[k] > 0 ? yLive[k] : arr[arr.length-1]);
+    const n = arr.length, now = arr[n-1];
+    const bp = v => Math.round((now - v) * 100);
+    out.rows[k] = { arr, now, d1: bp(arr[n-2]), w1: bp(arr[Math.max(0,n-6)]), mtd: bp(arr[0]) };
+  });
+  const r = out.rows;
+  out.wAvg = 0.3*r.y5.w1 + 0.5*r.y10.w1 + 0.2*r.y30.w1;
+  out.score = out.wAvg >= 15 ? -2 : out.wAvg >= 5 ? -1 : out.wAvg <= -15 ? 2 : out.wAvg <= -5 ? 1 : 0;
+  out.hasLive = hasLive;
+  return out;
+}
+function impactOf(w1){ return w1 >= 5 ? ["Bearish","e-bear"] : w1 <= -5 ? ["Bullish","e-bull"] : ["Neutral","e-mix"]; }
+const bpTxt = v => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v) + " bp";
+
+function renderYields(){
+  if (!data.yields) return;
+  const yc = yieldsCalc(), Y = data.yields;
+  // table
+  const t = $("yTable"); t.textContent = "";
+  const hd = document.createElement("tr");
+  hd.innerHTML = '<th>Bond</th><th class="n">Yield</th><th class="n">1 દિવસ</th><th class="n">1 અઠ.</th><th class="n">Sep માં</th><th>Silver</th>';
+  t.append(hd);
+  TEN.forEach(([k,name,col])=>{
+    const r = yc.rows[k];
+    const tr = document.createElement("tr");
+    const a = document.createElement("td");
+    const sw = document.createElement("i"); sw.style.cssText = "display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px;background:var("+col+")";
+    a.append(sw, document.createTextNode(name));
+    const mk = (txt, cls) => { const td = document.createElement("td"); td.className = "n " + (cls||""); td.textContent = txt; return td; };
+    const cl = v => v > 0 ? "down" : v < 0 ? "up" : "";   // yield up = bad for silver (red)
+    const imp = impactOf(r.w1);
+    const e = document.createElement("td"); const sp = document.createElement("span"); sp.className = "eff " + imp[1]; sp.textContent = imp[0]; e.append(sp);
+    tr.append(a, mk(r.now.toFixed(2)+"%"), mk(bpTxt(r.d1), cl(r.d1)), mk(bpTxt(r.w1), cl(r.w1)), mk(bpTxt(r.mtd), cl(r.mtd)), e);
+    t.append(tr);
+  });
+  // signal
+  const s = yc.score, sig = $("ySignal");
+  sig.textContent = "Silver score " + (s>0?"+":"") + s + (s<0 ? " · Yields વધે છે" : s>0 ? " · Yields ઘટે છે" : " · સ્થિર");
+  sig.style.color = s < 0 ? "var(--sell)" : s > 0 ? "var(--buy)" : "var(--warn)";
+  // curve
+  const r = yc.rows;
+  const sp305 = Math.round((r.y30.now - r.y5.now)*100), sp305start = Math.round((r.y30.arr[0] - r.y5.arr[0])*100);
+  const sp102 = Math.round((r.y10.now - Y.y2)*100);
+  const flat = sp305 < sp305start - 5, steep = sp305 > sp305start + 5;
+  const yUp = r.y10.mtd > 0;
+  let curveTxt;
+  if (flat && yUp) curveTxt = "<b>Bear flattening:</b> ટૂંકા ગાળાના (5Y) yield લાંબા ગાળાના કરતાં વધુ ઝડપથી વધ્યા છે. એનો અર્થ: બજાર માને છે કે Fed હજુ rate વધારશે. <b style='color:var(--sell)'>Silver માટે નકારાત્મક.</b>";
+  else if (steep && yUp) curveTxt = "<b>Bear steepening:</b> લાંબા ગાળાના (30Y) yield વધુ વધે છે. આ inflation કે સરકારી દેવાની ચિંતા બતાવે છે. Yields ઊંચા એટલે silver પર દબાણ, પણ inflation નો ડર લાંબા ગાળે silver ને ટેકો આપી શકે. <b style='color:var(--warn)'>Mixed.</b>";
+  else if (!yUp && steep) curveTxt = "<b>Bull steepening:</b> ટૂંકા ગાળાના yield ઝડપથી ઘટે છે, એટલે બજાર rate cut ની અપેક્ષા રાખે છે. <b style='color:var(--buy)'>Silver માટે સકારાત્મક.</b>";
+  else if (!yUp) curveTxt = "Yields ઘટે છે. <b style='color:var(--buy)'>Silver માટે રાહત.</b>";
+  else curveTxt = "Curve નો આકાર ખાસ બદલાયો નથી, પણ yields ઊંચા છે. <b style='color:var(--sell)'>Silver પર દબાણ.</b>";
+  $("yCurve").innerHTML =
+    "<div class='row between'><span>30Y − 5Y spread</span><span class='bp'>" + sp305 + " bp <span class='muted'>(1 Sep: " + sp305start + " bp)</span></span></div>" +
+    "<div class='row between'><span>10Y − 2Y spread</span><span class='bp'>" + sp102 + " bp</span></div>" +
+    "<div style='margin-top:6px'>" + curveTxt + "</div>";
+  // how
+  const w = Y.watch, how = $("yHow"); how.textContent = "";
+  const lines = [];
+  const lvl = (k, name) => {
+    const v = r[k].now, [lo, hi] = w[k];
+    if (v >= hi) lines.push([-1, name + " " + v.toFixed(2) + "% છે, " + hi.toFixed(2) + "% ઉપર. આ સ્તર ઉપર ટકે ત્યાં સુધી silver પર દબાણ રહેશે."]);
+    else if (v <= lo) lines.push([1, name + " " + v.toFixed(2) + "% છે, " + lo.toFixed(2) + "% નીચે. Silver માટે રાહત."]);
+    else lines.push([0, name + " " + v.toFixed(2) + "%: " + lo.toFixed(2) + "% નીચે જાય તો silver ને રાહત, " + hi.toFixed(2) + "% ઉપર જાય તો વધુ દબાણ."]);
+  };
+  lvl("y10","10Y"); lvl("y5","5Y"); lvl("y30","30Y");
+  lines.push([0, "નિયમ: yield વધે એટલે silver ઘટે. Silver પર કોઈ વ્યાજ મળતું નથી, એટલે bond નું વ્યાજ વધે ત્યારે રોકાણકારો silver છોડીને bond તરફ જાય છે. સાથે dollar પણ મજબૂત થાય છે."]);
+  lines.push([0, "સૌથી મહત્વનો 10Y છે (આખી દુનિયાનો benchmark). 5Y Fed ની અપેક્ષા બતાવે છે, 30Y inflation અને દેવાની ચિંતા."]);
+  lines.forEach(([s, txt])=>{
+    const li = document.createElement("li");
+    const p = document.createElement("span"); p.className = "pill " + (s>0?"p-pos":s<0?"p-neg":"p-zero"); p.textContent = s>0?"+":s<0?"−":"•";
+    const tx = document.createElement("span"); tx.textContent = txt;
+    li.append(p, tx); how.append(li);
+  });
+  // inputs
+  TEN.forEach(([k])=>{ const el = $("yIn" + k.slice(1)); if (document.activeElement !== el) el.value = (yLive[k] || Y[k][Y[k].length-1]).toFixed(2); });
+  renderYChart(yc);
+}
+
+function renderYChart(yc){
+  const box = $("yChart"); box.textContent = "";
+  const W = box.clientWidth || 480, H = box.clientHeight || 210;
+  const L = 40, R = 46, T = 10, B = 24;
+  const all = TEN.flatMap(([k]) => yc.rows[k].arr);
+  let lo = Math.floor(Math.min(...all) * 10) / 10, hi = Math.ceil(Math.max(...all) * 10) / 10;
+  const n = yc.dates.length;
+  const X = i => L + i / (n - 1) * (W - L - R);
+  const Yp = v => T + (hi - v) / (hi - lo) * (H - T - B);
+  const css = getComputedStyle(document.documentElement);
+  const tok = v => css.getPropertyValue(v).trim();
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg"); svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+  svg.setAttribute("role","img"); svg.setAttribute("aria-label","September માં 5Y, 10Y અને 30Y yields");
+  const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const a in attrs) e.setAttribute(a, attrs[a]); (parent||svg).append(e); return e; };
+  // grid + y ticks
+  const step = (hi - lo) > 0.8 ? 0.2 : 0.1;
+  for (let v = lo; v <= hi + 1e-9; v += step){
+    const y = Yp(v);
+    el("line", { x1: L, x2: W - R, y1: y, y2: y, stroke: tok("--line"), "stroke-width": 1 });
+    const tx = el("text", { x: L - 6, y: y + 4, "text-anchor": "end", "font-size": 11, fill: tok("--muted"), "font-family": tok("--mono") });
+    tx.textContent = v.toFixed(1) + "%";
+  }
+  // x labels: first, middle, last
+  [0, Math.floor((n-1)/2), n-1].forEach(i=>{
+    const tx = el("text", { x: X(i), y: H - 6, "text-anchor": i === 0 ? "start" : i === n-1 ? "end" : "middle", "font-size": 11, fill: tok("--muted") });
+    tx.textContent = yc.dates[i];
+  });
+  // lines + end labels (nudged apart)
+  const ends = [];
+  TEN.forEach(([k, name, col])=>{
+    const arr = yc.rows[k].arr;
+    el("path", { d: arr.map((v,i)=>(i?"L":"M") + X(i).toFixed(1) + " " + Yp(v).toFixed(1)).join(" "), fill: "none", stroke: tok(col), "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" });
+    el("circle", { cx: X(n-1), cy: Yp(arr[n-1]), r: 4, fill: tok(col), stroke: tok("--surface"), "stroke-width": 2 });
+    ends.push({ y: Yp(arr[n-1]), name, col });
+  });
+  ends.sort((a,b)=>a.y-b.y);
+  for (let i = 1; i < ends.length; i++) if (ends[i].y - ends[i-1].y < 13) ends[i].y = ends[i-1].y + 13;
+  ends.forEach(e=>{ const tx = el("text", { x: W - R + 8, y: e.y + 4, "font-size": 11, "font-weight": 600, fill: tok("--ink") }); tx.textContent = e.name; });
+  // hover layer
+  const cross = el("line", { y1: T, y2: H - B, stroke: tok("--muted"), "stroke-width": 1, "stroke-dasharray": "3 3", visibility: "hidden" });
+  const hit = el("rect", { x: L, y: 0, width: W - L - R, height: H, fill: "transparent" });
+  box.append(svg);
+  const tip = document.createElement("div"); tip.className = "ytip"; tip.hidden = true; box.append(tip);
+  const move = ev => {
+    const rect = svg.getBoundingClientRect();
+    const px = (ev.clientX - rect.left) * (W / rect.width);
+    const i = Math.max(0, Math.min(n - 1, Math.round((px - L) / (W - L - R) * (n - 1))));
+    cross.setAttribute("x1", X(i)); cross.setAttribute("x2", X(i)); cross.setAttribute("visibility", "visible");
+    tip.textContent = "";
+    const hd = document.createElement("div"); hd.style.fontWeight = "600"; hd.textContent = yc.dates[i]; tip.append(hd);
+    TEN.forEach(([k,name,col])=>{
+      const d = document.createElement("div");
+      const sw = document.createElement("i"); sw.style.cssText = "display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;background:var("+col+")";
+      d.append(sw, document.createTextNode(name + "  " + yc.rows[k].arr[i].toFixed(2) + "%"));
+      d.style.fontFamily = "var(--mono)"; tip.append(d);
+    });
+    tip.hidden = false;
+    const tx = X(i) / W * rect.width;
+    tip.style.left = Math.min(rect.width - tip.offsetWidth - 4, Math.max(4, tx + 10)) + "px";
+    tip.style.top = "6px";
+  };
+  hit.addEventListener("pointermove", move);
+  hit.addEventListener("pointerdown", move);
+  hit.addEventListener("pointerleave", ()=>{ tip.hidden = true; cross.setAttribute("visibility","hidden"); });
+  // legend
+  const lg = $("yLegend"); lg.textContent = "";
+  TEN.forEach(([k,name,col])=>{ const s = document.createElement("span"); const i = document.createElement("i"); i.style.background = "var("+col+")"; s.append(i, document.createTextNode(name)); lg.append(s); });
 }
 
 function side(total){ return total >= 3 ? "buy" : total <= -3 ? "sell" : "neutral"; }
@@ -604,7 +858,7 @@ function renderImpact(c){
 function renderDrivers(){
   const box = $("drivers"); box.textContent = "";
   data.drivers.forEach(dr=>{
-    const s = (dr.key in drvOverride) ? drvOverride[dr.key] : dr.score;
+    const s = drvScore(dr);
     const row = document.createElement("div"); row.className = "drv";
     const b = document.createElement("b"); b.textContent = dr.name;
     const sel = document.createElement("select"); sel.id = "drv-" + dr.key; sel.setAttribute("aria-label", dr.name + " score");
@@ -657,6 +911,7 @@ function renderAll(){
   renderPlan(c, sc);
   renderImpact(c);
   renderSpark(c);
+  renderYields();
   lastScore = sc;
 }
 
@@ -827,8 +1082,8 @@ $("applyBtn").addEventListener("click", ()=>{
   renderInputs(); renderAll();
 });
 $("resetBtn").addEventListener("click", ()=>{
-  live = {}; hlc = {}; drvOverride = {};
-  store.set("live",null); store.set("hlc",null); store.set("drv",null);
+  live = {}; hlc = {}; drvOverride = {}; yLive = {};
+  store.set("live",null); store.set("hlc",null); store.set("drv",null); store.set("ylive",null);
   $("sX").value = 0; $("sI").value = 0;
   full();
 });
@@ -852,8 +1107,20 @@ window.addEventListener("resize", ()=>renderAll());
 function applyTheme(t){
   document.documentElement.setAttribute("data-theme", t);
   $("themeBtn").textContent = t === "dark" ? "☀️ Light" : "🌙 Dark";
-  renderSpark(cur());
+  try { renderAll(); } catch(e){}
 }
+$("yApply").addEventListener("click", ()=>{
+  const Y = data.yields; yLive = {};
+  TEN.forEach(([k])=>{
+    const v = parseFloat($("yIn" + k.slice(1)).value), last = Y[k][Y[k].length-1];
+    if (v > 0 && v < 20 && Math.abs(v - last) > 0.001) yLive[k] = v;
+  });
+  store.set("ylive", { base: data.updatedAt, v: yLive });
+  renderDrivers(); renderAll();
+});
+$("yClear").addEventListener("click", ()=>{
+  yLive = {}; store.set("ylive", null); renderDrivers(); renderAll();
+});
 {
   const saved = store.get("theme");
   if (saved === "dark" || saved === "light") applyTheme(saved);
@@ -866,6 +1133,11 @@ $("themeBtn").addEventListener("click", ()=>{
   const t = isDark ? "light" : "dark";
   store.set("theme", t); applyTheme(t);
 });
+
+if (!inArtifact && !store.get("discOK")){
+  $("disc").hidden = false;
+  $("discOk").addEventListener("click", ()=>{ store.set("discOK", true); $("disc").hidden = true; });
+}
 
 full();
 { const f = store.get("feed"); feed.on = f === null ? true : !!f; $("autoLive").checked = feed.on; }
@@ -890,4 +1162,5 @@ startFeed();
 })();
 })();
 </script>
+
 </body></html>
