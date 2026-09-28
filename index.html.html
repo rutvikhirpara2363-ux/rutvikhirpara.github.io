@@ -1,0 +1,893 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"></head><body><title>Silver Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Figtree:wght@400;500;600&family=Noto+Sans+Gujarati:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#EDF0F3; --surface:#FFFFFF; --surface2:#F5F7F9; --ink:#141B22; --muted:#5A6673; --line:#D6DCE2;
+  --accent:#3D5A80; --accent-soft:#E1E8F1;
+  --buy:#1E8456; --buy-soft:#E1F2E9; --sell:#C23E37; --sell-soft:#F8E4E2; --warn:#A86F16; --warn-soft:#F6ECD9;
+  --display:"Sora","Noto Sans Gujarati",system-ui,sans-serif;
+  --body:"Figtree","Noto Sans Gujarati",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0E1318; --surface:#161D24; --surface2:#1B242D; --ink:#E6EBF0; --muted:#93A0AD; --line:#27313B;
+    --accent:#8FB3DE; --accent-soft:#1F2C3B;
+    --buy:#4CC38A; --buy-soft:#15302A; --sell:#F07167; --sell-soft:#3A1D1D; --warn:#E0A84A; --warn-soft:#352914;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E1318; --surface:#161D24; --surface2:#1B242D; --ink:#E6EBF0; --muted:#93A0AD; --line:#27313B;
+  --accent:#8FB3DE; --accent-soft:#1F2C3B;
+  --buy:#4CC38A; --buy-soft:#15302A; --sell:#F07167; --sell-soft:#3A1D1D; --warn:#E0A84A; --warn-soft:#352914;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;padding:20px 16px 48px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
+h1{font-size:22px;font-weight:700;letter-spacing:-.01em}
+h2{font-size:15px;font-weight:600}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.label{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.between{justify-content:space-between}
+
+/* header */
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between}
+.brand{display:flex;gap:12px;align-items:center}
+.ingot{width:38px;height:26px;border-radius:4px;background:linear-gradient(135deg,#f4f6f8 0%,#b9c2cb 45%,#e8ecef 60%,#8e99a4 100%);box-shadow:inset 0 0 0 1px rgba(0,0,0,.12);flex:none}
+.stamp{display:inline-flex;gap:6px;align-items:center;padding:4px 10px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:12.5px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--buy)}
+.dot.stale{background:var(--warn)}
+.dot.off{background:var(--muted)}
+.dot.err{background:var(--sell)}
+@media (prefers-reduced-motion:no-preference){ .dot.pulse{animation:pulse 1.6s ease-out infinite} }
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--buy) 60%,transparent)}100%{box-shadow:0 0 0 7px transparent}}
+.toggle{display:inline-flex;align-items:center;gap:6px;font-size:13px;cursor:pointer}
+.toggle input{accent-color:var(--accent);width:16px;height:16px}
+#spark{width:100%;height:56px;display:block}
+.toasts{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;z-index:50;width:min(520px,calc(100% - 32px))}
+.toast{background:var(--ink);color:var(--surface);border-radius:10px;padding:10px 14px;font-size:14px;font-weight:500;box-shadow:0 6px 24px rgba(0,0,0,.25);display:flex;justify-content:space-between;gap:10px;align-items:center}
+.toast button{background:transparent;border:0;color:inherit;padding:2px 6px;font-size:16px}
+button.on{background:var(--buy-soft);color:var(--buy);border-color:var(--buy)}
+
+/* live inputs */
+.live{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:end}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:12px;color:var(--muted);font-weight:500}
+input[type=number]{font-family:var(--mono);font-size:15px;padding:9px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);width:100%}
+input[type=number]:focus-visible,button:focus-visible,select:focus-visible,input[type=range]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button{font-family:var(--body);font-size:14px;font-weight:600;border-radius:8px;border:1px solid var(--line);background:var(--surface2);color:var(--ink);padding:9px 12px;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--surface)}
+button:hover{filter:brightness(1.05)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:transparent;padding:6px 12px;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:1.1fr 1fr;gap:16px}
+.bias{padding:20px;gap:14px}
+.bias-top{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.verdict{font-family:var(--display);font-weight:700;font-size:40px;line-height:1;letter-spacing:-.02em;padding:10px 18px;border-radius:10px}
+.v-buy{color:var(--buy);background:var(--buy-soft)}
+.v-sell{color:var(--sell);background:var(--sell-soft)}
+.v-neutral{color:var(--warn);background:var(--warn-soft)}
+.meter{position:relative;height:10px;border-radius:999px;background:linear-gradient(90deg,var(--sell) 0%,var(--warn) 50%,var(--buy) 100%);opacity:.9}
+.meter i{position:absolute;top:-5px;width:4px;height:20px;border-radius:2px;background:var(--ink);transform:translateX(-50%);box-shadow:0 0 0 2px var(--surface)}
+.meter-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.prices{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.price{background:var(--surface2);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:2px}
+.price .big{font-family:var(--mono);font-size:24px;font-weight:600}
+.chg{font-family:var(--mono);font-size:12.5px}
+.up{color:var(--buy)} .down{color:var(--sell)}
+.reasons{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.reasons li{display:flex;gap:8px;align-items:baseline;font-size:13.5px}
+.pill{font-family:var(--mono);font-size:11.5px;font-weight:600;padding:1px 7px;border-radius:999px;flex:none;min-width:34px;text-align:center}
+.p-pos{background:var(--buy-soft);color:var(--buy)} .p-neg{background:var(--sell-soft);color:var(--sell)} .p-zero{background:var(--surface2);color:var(--muted)}
+
+/* grid */
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+
+/* ladder */
+.ladder{position:relative;height:340px;margin-left:4px}
+.lvl{position:absolute;left:0;right:0;display:flex;align-items:center;gap:8px;transform:translateY(-50%);font-size:12.5px}
+.lvl .tag{font-family:var(--mono);font-weight:600;width:34px;flex:none}
+.lvl .rule{flex:1;height:0;border-top:1px dashed var(--line)}
+.lvl .v{font-family:var(--mono);text-align:right;white-space:nowrap}
+.lvl.r .tag{color:var(--sell)} .lvl.s .tag{color:var(--buy)} .lvl.p .tag{color:var(--accent)}
+.lvl.a .tag{color:var(--warn)}
+.lvl.now{z-index:2}
+.lvl.now .rule{border-top:2px solid var(--ink)}
+.lvl.now .tag,.lvl.now .v{color:var(--ink);font-weight:700}
+.lvl.now .v{background:var(--ink);color:var(--surface);padding:1px 6px;border-radius:4px}
+
+/* targets */
+.plan{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.plan-box{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{padding:6px 4px;text-align:left;border-bottom:1px solid var(--line)}
+th{font-weight:600;color:var(--muted);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase}
+td.n{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+th.n{text-align:right}
+tr:last-child td{border-bottom:0}
+.t-sl td:first-child{color:var(--sell);font-weight:600}
+.t-tg td:first-child{color:var(--buy);font-weight:600}
+.t-en td:first-child{color:var(--accent);font-weight:600}
+
+/* impact */
+.sens{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.sens .price .big{font-size:20px}
+.sim{display:flex;flex-direction:column;gap:10px}
+.slider{display:grid;grid-template-columns:120px 1fr 78px;gap:10px;align-items:center;font-size:13px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.result{display:flex;justify-content:space-between;align-items:baseline;background:var(--surface2);border-radius:10px;padding:12px;flex-wrap:wrap;gap:8px}
+
+/* drivers */
+.drivers{display:flex;flex-direction:column;gap:0}
+.drv{display:grid;grid-template-columns:1fr auto;gap:4px 12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.drv:last-child{border-bottom:0}
+.drv b{font-weight:600;font-size:14px}
+.drv p{margin:0;font-size:12.5px;color:var(--muted);grid-column:1/-1}
+select{font-family:var(--mono);font-size:13px;padding:5px 8px;border-radius:6px;border:1px solid var(--line);background:var(--surface2);color:var(--ink)}
+
+/* news & events */
+.news{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.news li{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}
+.eff{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-top:2px;white-space:nowrap}
+.e-bear{background:var(--sell-soft);color:var(--sell)} .e-bull{background:var(--buy-soft);color:var(--buy)} .e-mix{background:var(--warn-soft);color:var(--warn)}
+.news .t{font-weight:600;font-size:14px}
+.news .d{font-size:12.5px;color:var(--muted)}
+.events td:first-child{white-space:nowrap}
+.imp{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.imp.high{background:var(--sell)} .imp.med{background:var(--warn)}
+.scroll{overflow-x:auto}
+details summary{cursor:pointer;font-weight:600;font-size:13.5px}
+.inputs3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:8px}
+footer{font-size:12px;color:var(--muted);text-align:left;max-width:70ch}
+.note{font-size:12.5px;background:var(--accent-soft);color:var(--ink);border-radius:8px;padding:8px 10px}
+
+@media (max-width:860px){
+  .hero,.grid{grid-template-columns:1fr}
+  .live{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:480px){
+  .verdict{font-size:32px}
+  .prices,.sens,.plan{grid-template-columns:1fr}
+  .slider{grid-template-columns:1fr 70px}
+  .slider label{grid-column:1/-1}
+  .inputs3{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:no-preference){
+  .meter i{transition:left .4s ease}
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <div class="ingot" aria-hidden="true"></div>
+      <div>
+        <h1>Silver Desk</h1>
+        <div class="small muted">MCX Silver + XAG/USD · પોતાનો prediction dashboard</div>
+      </div>
+    </div>
+    <div class="row">
+      <span class="stamp"><span class="dot off" id="feedDot"></span><span id="feedTxt">Live: જોડાય છે…</span></span>
+      <span class="stamp"><span class="dot" id="freshDot"></span><span id="asOf">—</span></span>
+      <span class="stamp" id="srcStamp">Data: snapshot</span>
+      <button type="button" id="themeBtn" class="stamp" style="cursor:pointer;font-weight:600" aria-label="Theme બદલો">🌙 Dark</button>
+    </div>
+  </header>
+
+  <!-- LIVE INPUT -->
+  <section class="card" aria-labelledby="liveH">
+    <div class="row between">
+      <h2 id="liveH">Live ભાવ</h2>
+      <div class="row" style="gap:10px">
+        <label class="toggle" for="autoLive"><input type="checkbox" id="autoLive" checked> Auto live (દર 30 સેકન્ડ)</label>
+        <button type="button" id="alertBtn">🔔 Alerts બંધ</button>
+      </div>
+    </div>
+    <div class="small muted">XAG/USD અને USD/INR આપમેળે આવે છે. MCX નો ભાવ દિવસમાં એક વાર broker app માંથી નાખીને Update કરો, એટલે ₹ ના બધા levels MCX સાથે મેળ ખાશે.</div>
+    <div class="live">
+      <div class="field"><label for="inMcx">MCX Silver (₹/kg) <span id="mcxContract"></span></label><input id="inMcx" type="number" step="1" inputmode="decimal"></div>
+      <div class="field"><label for="inXag">XAG/USD ($/oz)</label><input id="inXag" type="number" step="0.01" inputmode="decimal"></div>
+      <div class="field"><label for="inInr">USD/INR (₹)</label><input id="inInr" type="number" step="0.01" inputmode="decimal"></div>
+      <div class="row" style="gap:8px"><button class="primary" id="applyBtn" type="button">Update કરો</button><button id="resetBtn" type="button">Reset</button></div>
+    </div>
+    <div class="small muted" id="calibNote"></div>
+  </section>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="card bias" aria-labelledby="biasH">
+      <div class="row between"><h2 id="biasH">Buy / Sell bias</h2><span class="label" id="biasSub">આજ માટે</span></div>
+      <div class="bias-top">
+        <div class="verdict" id="verdict">—</div>
+        <div style="flex:1;min-width:180px">
+          <div class="t" id="verdictLine" style="font-weight:600"></div>
+          <div class="small muted" id="scoreLine"></div>
+        </div>
+      </div>
+      <div>
+        <div class="meter" aria-hidden="true"><i id="needle" style="left:50%"></i></div>
+        <div class="meter-scale"><span>Strong Sell</span><span>Neutral</span><span>Strong Buy</span></div>
+      </div>
+      <ul class="reasons" id="reasons"></ul>
+    </div>
+
+    <div class="card" aria-labelledby="pxH">
+      <h2 id="pxH">ભાવ અત્યારે</h2>
+      <div class="prices">
+        <div class="price"><span class="label">India · MCX</span><span class="big" id="pxMcx">—</span><span class="small muted">₹ per kg</span></div>
+        <div class="price"><span class="label">US · XAG/USD</span><span class="big" id="pxXag">—</span><span class="small muted">$ per troy oz</span></div>
+      </div>
+      <div>
+        <div class="row between small muted"><span>Live chart (છેલ્લા ticks)</span><span class="num" id="sessHL"></span></div>
+        <canvas id="spark" aria-label="Live XAG/USD ticks"></canvas>
+      </div>
+      <table>
+        <tr><th>ફેરફાર</th><th class="n">1 દિવસ</th><th class="n">1 અઠવાડિયું</th><th class="n">1 મહિનો</th></tr>
+        <tr><td>XAG/USD</td><td class="n" id="c1"></td><td class="n" id="c2"></td><td class="n" id="c3"></td></tr>
+      </table>
+      <div class="note" id="summary"></div>
+    </div>
+  </section>
+
+  <!-- LEVELS + TARGETS -->
+  <section class="grid">
+    <div class="card" aria-labelledby="srH">
+      <div class="row between">
+        <h2 id="srH">Support &amp; Resistance</h2>
+        <div class="row" style="gap:8px">
+          <div class="seg" role="group" aria-label="Timeframe"><button type="button" data-tf="day" aria-pressed="true">Day</button><button type="button" data-tf="week" aria-pressed="false">Week</button></div>
+          <div class="seg" role="group" aria-label="Unit"><button type="button" data-unit="inr" aria-pressed="true">₹</button><button type="button" data-unit="usd" aria-pressed="false">$</button></div>
+        </div>
+      </div>
+      <div class="ladder" id="ladder"></div>
+      <div class="small muted">R = resistance, S = support, P = pivot (classic floor pivot). <span style="color:var(--warn);font-weight:600">A</span> = analysts એ આપેલા મુખ્ય chart levels.</div>
+      <details>
+        <summary>Pivot માટેના High / Low / Close બદલો</summary>
+        <div class="small muted" style="margin-top:6px">XAG/USD માં. Day = છેલ્લું session, Week = છેલ્લું અઠવાડિયું.</div>
+        <div class="label" style="margin-top:8px">Day</div>
+        <div class="inputs3">
+          <div class="field"><label for="dH">High</label><input id="dH" type="number" step="0.01"></div>
+          <div class="field"><label for="dL">Low</label><input id="dL" type="number" step="0.01"></div>
+          <div class="field"><label for="dC">Close</label><input id="dC" type="number" step="0.01"></div>
+        </div>
+        <div class="label" style="margin-top:8px">Week</div>
+        <div class="inputs3">
+          <div class="field"><label for="wH">High</label><input id="wH" type="number" step="0.01"></div>
+          <div class="field"><label for="wL">Low</label><input id="wL" type="number" step="0.01"></div>
+          <div class="field"><label for="wC">Close</label><input id="wC" type="number" step="0.01"></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="card" aria-labelledby="tgH">
+      <div class="row between"><h2 id="tgH">Target &amp; Stop-loss</h2><span class="label" id="planSide"></span></div>
+      <div class="plan">
+        <div class="plan-box">
+          <div class="label">1-day plan</div>
+          <div class="scroll"><table id="planDay"></table></div>
+        </div>
+        <div class="plan-box">
+          <div class="label">1-week plan</div>
+          <div class="scroll"><table id="planWeek"></table></div>
+        </div>
+      </div>
+      <div class="small muted" id="planNote"></div>
+      <div class="small muted">Risk:Reward ગણતરી T1 પ્રમાણે. SL હંમેશાં order સાથે જ મૂકો.</div>
+    </div>
+  </section>
+
+  <!-- IMPACT + DRIVERS -->
+  <section class="grid">
+    <div class="card" aria-labelledby="imH">
+      <h2 id="imH">XAG/USD + USD/INR impact</h2>
+      <div class="sens">
+        <div class="price"><span class="label">XAG $1 ઉપર/નીચે</span><span class="big" id="sensXag">—</span><span class="small muted">MCX ₹/kg પર અસર</span></div>
+        <div class="price"><span class="label">USD/INR ₹1 ઉપર/નીચે</span><span class="big" id="sensInr">—</span><span class="small muted">MCX ₹/kg પર અસર</span></div>
+      </div>
+      <div class="sim">
+        <div class="label">What-if simulator</div>
+        <div class="slider"><label for="sX">XAG/USD ફેરફાર</label><input id="sX" type="range" min="-5" max="5" step="0.1" value="0"><span class="num" id="sXv">$0.00</span></div>
+        <div class="slider"><label for="sI">USD/INR ફેરફાર</label><input id="sI" type="range" min="-2" max="2" step="0.05" value="0"><span class="num" id="sIv">₹0.00</span></div>
+        <div class="result"><span class="small muted">અંદાજિત MCX ભાવ</span><span><span class="num" style="font-size:20px;font-weight:600" id="simOut">—</span> <span class="chg" id="simChg"></span></span></div>
+      </div>
+      <div class="small muted" id="formulaNote"></div>
+    </div>
+
+    <div class="card" aria-labelledby="drH">
+      <div class="row between"><h2 id="drH">Fed / BOJ / macro factors</h2><span class="small muted">Score તમે બદલી શકો</span></div>
+      <div class="drivers" id="drivers"></div>
+    </div>
+  </section>
+
+  <!-- NEWS + EVENTS -->
+  <section class="grid">
+    <div class="card" aria-labelledby="nwH">
+      <h2 id="nwH">મહત્વના news અને silver પર અસર</h2>
+      <ul class="news" id="news"></ul>
+    </div>
+    <div class="card" aria-labelledby="evH">
+      <h2 id="evH">આવનારા events (IST)</h2>
+      <div class="scroll"><table class="events" id="events"></table></div>
+      <div class="small muted">US data સામાન્ય રીતે સાંજે 6 થી 8 વાગ્યે (IST) આવે, ત્યારે MCX evening session માં મોટી હલચલ થાય.</div>
+    </div>
+  </section>
+
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <footer>
+    Live ભાવ: XAG/USD gold-api.com પરથી દર 30 સેકન્ડે, USD/INR open.er-api.com પરથી (દિવસમાં એક વાર બદલાય; broker નો ભાવ નાખશો તો એ જ વપરાશે). આ tool technical pivots અને news-based scoring થી અંદાજ આપે છે, ગેરંટી નહીં. Levels ₹ માં ફેરવવા XAG × USD/INR × 32.1507 × premium factor વપરાય છે; premium factor (duty + futures premium) તમારા નાખેલા MCX ભાવ પરથી આપમેળે ગોઠવાય છે. Trading નો નિર્ણય તમારો પોતાનો.
+  </footer>
+</div>
+
+<script>
+(function(){
+const OZ = 32.1507; // troy oz per kg
+
+// Embedded snapshot (Fri 25 Sep 2026 close). Replaced by the db document when one exists.
+const SNAPSHOT = {
+  updatedAt: "2026-09-26T15:55:00+05:30",
+  asOfLabel: "શુક્ર 25 Sep close",
+  xag: 64.26, inr: 95.80, mcx: 233850, mcxContract: "Dec 2026",
+  day:  { h: 64.60, l: 63.60, c: 64.26 },
+  week: { h: 66.40, l: 63.60, c: 64.26 },
+  change: { d1: 0.68, w1: -3.7, m1: -5.6 },
+  analyst: [
+    { v: 62.25, label: "Monthly low / H&S neckline" },
+    { v: 60.87, label: "6 Aug low" },
+    { v: 64.60, label: "22 Sep low, હવે resistance" },
+    { v: 66.90, label: "8 Sep peak" }
+  ],
+  drivers: [
+    { key: "fed", name: "Fed policy", score: -2, note: "Sep 16 એ 25bp hike. Williams, Paulson જેવા officials વર્ષના અંત પહેલાં વધુ એક hike ની વાત કરે છે. October hike ની શક્યતા ~67%." },
+    { key: "yields", name: "US 10Y yield", score: -1, note: "10Y yield ~5.2%, 2007 પછી સૌથી ઊંચી. વ્યાજ વગરની silver માટે નકારાત્મક." },
+    { key: "dxy", name: "US Dollar (DXY)", score: -1, note: "DXY ~108.5, multi-year high. મજબૂત dollar એટલે XAG પર દબાણ." },
+    { key: "inr", name: "Rupee (USD/INR)", score: 1, note: "USD/INR ~95.8–96.5. નબળો rupee MCX ભાવને ટેકો આપે છે, ભલે XAG નીચે હોય." },
+    { key: "boj", name: "Bank of Japan", score: 0, note: "18 Sep એ BOJ એ rate 30+ વર્ષની ઊંચાઈએ વધાર્યો, Ueda વધુ hike નો સંકેત. પણ yen મજબૂત ન થયો, એટલે dollar પર ખાસ અસર નહીં." },
+    { key: "geo", name: "Middle East / Oil", score: 0, note: "US-Iran વાતચીતથી oil થોડું નીચે, પણ Houthi હુમલાથી જોખમ યથાવત. Safe-haven માંગ વધે, પણ ઊંચું oil = inflation = hawkish Fed. એટલે mixed." },
+    { key: "phys", name: "Physical / industrial demand", score: 1, note: "$62–63 zone માં physical buyers સામાન્ય રીતે આવે છે. Solar/industrial demand નીચે ટેકો આપે." }
+  ],
+  news: [
+    { date: "25 Sep", effect: "bear", title: "Silver ~$64, અઠવાડિયામાં ~3.7% ઘટાડો", note: "Yields અને dollar મજબૂત, $64 ઉપર ટકી શકતું નથી." },
+    { date: "23 Sep", effect: "bear", title: "Fed Chair Warsh નું hawkish guidance", note: "Rates હજુ inflation રોકવા પૂરતા ઊંચા નથી, એવો સંકેત. Silver $64 support તરફ." },
+    { date: "18 Sep", effect: "mix", title: "BOJ એ rate વધાર્યો, વધુ hike ના સંકેત", note: "Yen માં ખાસ તેજી નહીં. Dollar નબળો થાય તો જ silver ને ફાયદો." },
+    { date: "16 Sep", effect: "bear", title: "Fed નો 25bp hike, 2023 પછી પહેલો", note: "Higher-for-longer narrative થી precious metals પર દબાણ." },
+    { date: "25 Sep", effect: "bull", title: "Rupee ~95.80 પર, નબળો રહે છે", note: "MCX silver ને XAG ઘટાડા સામે થોડું રક્ષણ." }
+  ],
+  events: [
+    { when: "2026-09-29T19:30:00+05:30", label: "US JOLTS job openings + Consumer Confidence", impact: "med" },
+    { when: "2026-09-30T17:45:00+05:30", label: "US ADP private payrolls", impact: "med" },
+    { when: "2026-09-30T18:00:00+05:30", label: "US PCE inflation (Aug) + GDP Q2 final", impact: "high" },
+    { when: "2026-10-01T19:30:00+05:30", label: "US ISM Manufacturing PMI", impact: "med" },
+    { when: "2026-10-02T18:00:00+05:30", label: "US Nonfarm Payrolls (Sep)", impact: "high" },
+    { when: "2026-10-29T23:30:00+05:30", label: "FOMC decision (Oct 28–29)", impact: "high" }
+  ],
+  eventsNote: "US CPI (Sep) October માં આવશે; BOJ ની આગલી બેઠક October ના અંતે.",
+  summary: "Fed hawkish, yields અને dollar ઊંચા, એટલે trend નબળો. $62.2–62.3 તૂટે તો ઘટાડો ઝડપી થઈ શકે. PCE (30 Sep) અને NFP (2 Oct) સૌથી મોટા triggers."
+};
+
+let data = SNAPSHOT;
+let source = "snapshot";
+let tf = "day", unit = "inr";
+let live = {}; // user overrides: xag, inr, mcx
+let hlc = {};  // user overrides for pivots
+let drvOverride = {};
+
+const $ = id => document.getElementById(id);
+const store = {
+  get(k){ try{ return JSON.parse(localStorage.getItem("silverdesk:"+k)); }catch(e){ return null; } },
+  set(k,v){ try{ localStorage.setItem("silverdesk:"+k, JSON.stringify(v)); }catch(e){} }
+};
+
+const inrFmt = v => "₹" + Math.round(v).toLocaleString("en-IN");
+const usdFmt = v => "$" + v.toFixed(2);
+const signed = (v, f) => (v>0?"+":v<0?"−":"") + f(Math.abs(v));
+
+function loadLocal(){
+  const saved = store.get("live");
+  if (saved && saved.base === data.updatedAt) live = saved.v || {};
+  else live = {};
+  const h = store.get("hlc");
+  hlc = (h && h.base === data.updatedAt) ? (h.v || {}) : {};
+  const d = store.get("drv");
+  drvOverride = (d && d.base === data.updatedAt) ? (d.v || {}) : {};
+  tf = store.get("tf") || "day";
+  unit = store.get("unit") || "inr";
+}
+
+function cur(){
+  const xag = live.xag || data.xag;
+  const inr = live.inr || data.inr;
+  // premium factor: calibrate from whichever set of MCX/XAG/INR is most current
+  const k = live.k || data.mcx / (data.xag * data.inr * OZ);
+  const mcx = xag * inr * OZ * k;
+  return { xag, inr, k, mcx, F: inr * OZ * k };
+}
+
+function pivots(h,l,c){
+  const p = (h+l+c)/3;
+  return { P:p, R1:2*p-l, S1:2*p-h, R2:p+(h-l), S2:p-(h-l), R3:h+2*(p-l), S3:l-2*(h-p), range:h-l };
+}
+function getHLC(which){
+  const base = data[which];
+  const o = hlc[which] || {};
+  return { h: o.h || base.h, l: o.l || base.l, c: o.c || base.c };
+}
+
+function scoreAll(c){
+  const d = getHLC("day"), w = getHLC("week");
+  const pd = pivots(d.h,d.l,d.c), pw = pivots(w.h,w.l,w.c);
+  const items = [];
+  items.push({ s: c.xag > pd.P ? 1 : -1, t: c.xag > pd.P ? "ભાવ daily pivot ઉપર" : "ભાવ daily pivot નીચે" });
+  items.push({ s: c.xag > pw.P ? 1 : -1, t: c.xag > pw.P ? "ભાવ weekly pivot ઉપર" : "ભાવ weekly pivot નીચે" });
+  const w1 = data.change.w1, m1 = data.change.m1;
+  items.push({ s: w1 > 1 ? 1 : w1 < -1 ? -1 : 0, t: "1 અઠવાડિયાનો trend (" + (w1>0?"+":"") + w1 + "%)" });
+  items.push({ s: m1 > 2 ? 1 : m1 < -2 ? -1 : 0, t: "1 મહિનાનો trend (" + (m1>0?"+":"") + m1 + "%)" });
+  const tech = items.reduce((a,b)=>a+b.s,0);
+  let macro = 0;
+  const drvItems = data.drivers.map(dr => {
+    const s = (dr.key in drvOverride) ? drvOverride[dr.key] : dr.score;
+    macro += s;
+    return { s, t: dr.name };
+  });
+  return { total: tech + macro, tech, macro, items, drvItems, pd, pw };
+}
+
+function side(total){ return total >= 3 ? "buy" : total <= -3 ? "sell" : "neutral"; }
+
+function renderHeader(){
+  const t = new Date(data.updatedAt);
+  const ageH = (Date.now() - t.getTime()) / 36e5;
+  $("asOf").textContent = "Updated " + t.toLocaleString("en-IN",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"Asia/Kolkata"}) + " · " + (data.asOfLabel || "");
+  $("freshDot").classList.toggle("stale", ageH > 30);
+  $("srcStamp").textContent = source === "db" ? "Data: auto-refresh" : "Data: snapshot";
+  $("mcxContract").textContent = data.mcxContract ? "· " + data.mcxContract : "";
+}
+
+function renderInputs(){
+  const c = cur();
+  $("inXag").value = (live.xag || data.xag).toFixed(2);
+  $("inInr").value = (live.inr || data.inr).toFixed(2);
+  $("inMcx").value = Math.round(c.mcx);
+  $("inXag").placeholder = data.xag; $("inInr").placeholder = data.inr; $("inMcx").placeholder = data.mcx;
+  $("calibNote").textContent = "Premium factor " + c.k.toFixed(4) + " (duty + futures premium). " + (live.k ? "તમારા MCX ભાવ પરથી ગોઠવાયો." : "છેલ્લા data પરથી. MCX ભાવ નાખશો તો વધુ સચોટ થશે.");
+  const d = getHLC("day"), w = getHLC("week");
+  $("dH").value = d.h; $("dL").value = d.l; $("dC").value = d.c;
+  $("wH").value = w.h; $("wL").value = w.l; $("wC").value = w.c;
+}
+
+function renderHero(c, sc){
+  const s = side(sc.total);
+  const v = $("verdict");
+  v.className = "verdict v-" + s;
+  v.textContent = s === "buy" ? "BUY" : s === "sell" ? "SELL" : "WAIT";
+  const lines = {
+    buy: "Buy on dips: support નજીક ખરીદી, SL support નીચે.",
+    sell: "Sell on rise: resistance નજીક વેચાણ, SL resistance ઉપર.",
+    neutral: "Range market: S1–R1 વચ્ચે, breakout ની રાહ જુઓ."
+  };
+  $("verdictLine").textContent = lines[s];
+  $("scoreLine").textContent = "કુલ score " + (sc.total>0?"+":"") + sc.total + "  ·  technical " + (sc.tech>0?"+":"") + sc.tech + ", macro/news " + (sc.macro>0?"+":"") + sc.macro;
+  const pct = Math.max(0, Math.min(100, 50 + sc.total * (50/10)));
+  $("needle").style.left = pct + "%";
+  const ul = $("reasons"); ul.textContent = "";
+  [...sc.items, ...sc.drvItems.filter(x=>x.s!==0)].forEach(it=>{
+    const li = document.createElement("li");
+    const p = document.createElement("span");
+    p.className = "pill " + (it.s>0?"p-pos":it.s<0?"p-neg":"p-zero");
+    p.textContent = (it.s>0?"+":"") + it.s;
+    const t = document.createElement("span"); t.textContent = it.t;
+    li.append(p,t); ul.append(li);
+  });
+  $("pxMcx").textContent = inrFmt(c.mcx);
+  $("pxXag").textContent = usdFmt(c.xag);
+  const setChg = (id,v) => { const el=$(id); el.textContent = (v>0?"+":"") + v.toFixed(1) + "%"; el.className = "n " + (v>=0?"up":"down"); };
+  setChg("c1", feed.lastOk ? (c.xag - data.day.c) / data.day.c * 100 : data.change.d1); setChg("c2", data.change.w1); setChg("c3", data.change.m1);
+  $("summary").textContent = data.summary;
+}
+
+function renderLadder(c, sc){
+  const pv = tf === "day" ? sc.pd : sc.pw;
+  const lv = [
+    {k:"R3",v:pv.R3,c:"r"},{k:"R2",v:pv.R2,c:"r"},{k:"R1",v:pv.R1,c:"r"},
+    {k:"P",v:pv.P,c:"p"},
+    {k:"S1",v:pv.S1,c:"s"},{k:"S2",v:pv.S2,c:"s"},{k:"S3",v:pv.S3,c:"s"}
+  ];
+  const lo = pv.S3, hi = pv.R3;
+  (data.analyst||[]).forEach(a => { if (a.v > lo && a.v < hi) lv.push({k:"A",v:a.v,c:"a",label:a.label}); });
+  lv.push({k:"NOW",v:c.xag,c:"now"});
+  const pad = (hi-lo)*0.06;
+  const min = Math.min(lo, c.xag) - pad, max = Math.max(hi, c.xag) + pad;
+  const box = $("ladder"); box.textContent = "";
+  // sort by value desc, then nudge to avoid overlap (min 20px)
+  const H = box.clientHeight || 340;
+  const items = lv.map(x => ({...x, y: (max - x.v)/(max-min)*H})).sort((a,b)=>a.y-b.y);
+  for (let i=1;i<items.length;i++){ if (items[i].y - items[i-1].y < 20) items[i].y = items[i-1].y + 20; }
+  const overflow = items.length ? items[items.length-1].y - (H-8) : 0;
+  if (overflow > 0) items.forEach(x => x.y -= overflow);
+  items.forEach(x=>{
+    const row = document.createElement("div");
+    row.className = "lvl " + x.c;
+    row.style.top = x.y + "px";
+    const tag = document.createElement("span"); tag.className="tag"; tag.textContent = x.k === "NOW" ? "Now" : x.k;
+    const rule = document.createElement("span"); rule.className="rule";
+    const val = document.createElement("span"); val.className="v";
+    val.textContent = unit === "inr" ? inrFmt(x.v * c.F) + "  ·  " + usdFmt(x.v) : usdFmt(x.v) + "  ·  " + inrFmt(x.v * c.F);
+    if (x.label) row.title = x.label;
+    row.append(tag, rule, val);
+    box.append(row);
+  });
+}
+
+function planRows(c, pv, s, atr){
+  const px = c.xag;
+  let entry, t1, t2, sl, name;
+  if (s === "sell"){
+    entry = Math.max(px, Math.min(pv.R1, px + atr*0.3));
+    t1 = pv.S1 < entry ? pv.S1 : entry - atr*0.6;
+    t2 = pv.S2 < t1 ? pv.S2 : t1 - atr*0.5;
+    sl = pv.R1 > entry ? pv.R1 + atr*0.1 : pv.R2;
+    if (sl - entry < atr*0.35) sl = entry + atr*0.35;
+    name = "Sell";
+  } else if (s === "buy"){
+    entry = Math.min(px, Math.max(pv.S1, px - atr*0.3));
+    t1 = pv.R1 > entry ? pv.R1 : entry + atr*0.6;
+    t2 = pv.R2 > t1 ? pv.R2 : t1 + atr*0.5;
+    sl = pv.S1 < entry ? pv.S1 - atr*0.1 : pv.S2;
+    if (entry - sl < atr*0.35) sl = entry - atr*0.35;
+    name = "Buy";
+  } else {
+    return { neutral: true, rows: [
+      ["Buy zone (S1)", pv.S1], ["Buy SL", pv.S1 - atr*0.35],
+      ["Sell zone (R1)", pv.R1], ["Sell SL", pv.R1 + atr*0.35],
+      ["Breakout ઉપર", pv.R2], ["Breakdown નીચે", pv.S2]
+    ]};
+  }
+  const rr = Math.abs(t1-entry)/Math.abs(sl-entry);
+  return { name, rr, rows: [["Entry ("+name+")", entry, "t-en"],["Target 1", t1, "t-tg"],["Target 2", t2, "t-tg"],["Stop-loss", sl, "t-sl"]] };
+}
+
+function fillPlan(tableId, plan, c){
+  const t = $(tableId); t.textContent = "";
+  const hd = document.createElement("tr");
+  hd.innerHTML = '<th></th><th class="n">MCX ₹/kg</th><th class="n">XAG $</th>';
+  t.append(hd);
+  plan.rows.forEach(r=>{
+    const tr = document.createElement("tr"); if (r[2]) tr.className = r[2];
+    const a = document.createElement("td"); a.textContent = r[0];
+    const b = document.createElement("td"); b.className="n"; b.textContent = inrFmt(r[1]*c.F);
+    const d = document.createElement("td"); d.className="n"; d.textContent = usdFmt(r[1]);
+    tr.append(a,b,d); t.append(tr);
+  });
+  if (!plan.neutral){
+    const tr = document.createElement("tr");
+    const a = document.createElement("td"); a.textContent = "Risk : Reward";
+    const b = document.createElement("td"); b.className="n"; b.colSpan = 2; b.textContent = "1 : " + plan.rr.toFixed(2);
+    tr.append(a,b); t.append(tr);
+  }
+}
+
+function renderPlan(c, sc){
+  const s = side(sc.total);
+  const dRange = sc.pd.range, wRange = sc.pw.range;
+  fillPlan("planDay", planRows(c, sc.pd, s, Math.max(dRange, 0.4)), c);
+  fillPlan("planWeek", planRows(c, sc.pw, s, Math.max(wRange, 1)), c);
+  $("planSide").textContent = s === "buy" ? "Buy setup" : s === "sell" ? "Sell setup" : "Range setup";
+  $("planSide").style.color = s === "buy" ? "var(--buy)" : s === "sell" ? "var(--sell)" : "var(--warn)";
+  $("planNote").textContent = "Day range ≈ " + usdFmt(dRange) + " (" + inrFmt(dRange*c.F) + "), week range ≈ " + usdFmt(wRange) + " (" + inrFmt(wRange*c.F) + ").";
+}
+
+function renderImpact(c){
+  $("sensXag").textContent = "±" + inrFmt(c.F);
+  $("sensInr").textContent = "±" + inrFmt(c.xag * OZ * c.k);
+  const dx = parseFloat($("sX").value), di = parseFloat($("sI").value);
+  $("sXv").textContent = signed(dx, v=>"$"+v.toFixed(2));
+  $("sIv").textContent = signed(di, v=>"₹"+v.toFixed(2));
+  const out = (c.xag+dx) * (c.inr+di) * OZ * c.k;
+  $("simOut").textContent = inrFmt(out);
+  const ch = out - c.mcx;
+  $("simChg").textContent = signed(ch, inrFmt);
+  $("simChg").className = "chg " + (ch>=0?"up":"down");
+  $("formulaNote").textContent = "MCX ≈ XAG " + usdFmt(c.xag) + " × USD/INR " + c.inr.toFixed(2) + " × 32.1507 × " + c.k.toFixed(4);
+}
+
+function renderDrivers(){
+  const box = $("drivers"); box.textContent = "";
+  data.drivers.forEach(dr=>{
+    const s = (dr.key in drvOverride) ? drvOverride[dr.key] : dr.score;
+    const row = document.createElement("div"); row.className = "drv";
+    const b = document.createElement("b"); b.textContent = dr.name;
+    const sel = document.createElement("select"); sel.id = "drv-" + dr.key; sel.setAttribute("aria-label", dr.name + " score");
+    [2,1,0,-1,-2].forEach(v=>{ const o=document.createElement("option"); o.value=v; o.textContent=(v>0?"+":"")+v+(v>0?" bullish":v<0?" bearish":" neutral"); if(v===s)o.selected=true; sel.append(o); });
+    sel.addEventListener("change", ()=>{ drvOverride[dr.key] = parseInt(sel.value,10); store.set("drv",{base:data.updatedAt,v:drvOverride}); renderAll(); });
+    const p = document.createElement("p"); p.textContent = dr.note;
+    row.append(b, sel, p); box.append(row);
+  });
+}
+
+function renderNews(){
+  const ul = $("news"); ul.textContent = "";
+  const lab = {bear:["Bearish","e-bear"], bull:["Bullish","e-bull"], mix:["Mixed","e-mix"]};
+  data.news.forEach(n=>{
+    const li = document.createElement("li");
+    const e = document.createElement("span"); const L = lab[n.effect] || lab.mix; e.className = "eff " + L[1]; e.textContent = L[0];
+    const d = document.createElement("div");
+    const t = document.createElement("div"); t.className="t"; t.textContent = n.title;
+    const m = document.createElement("div"); m.className="d"; m.textContent = n.date + " · " + n.note;
+    d.append(t,m); li.append(e,d); ul.append(li);
+  });
+  const t = $("events"); t.textContent = "";
+  const hd = document.createElement("tr"); hd.innerHTML = "<th>ક્યારે</th><th>Event</th><th class='n'>બાકી</th>"; t.append(hd);
+  const now = Date.now();
+  data.events.filter(e => new Date(e.when).getTime() > now - 6*36e5).forEach(e=>{
+    const when = new Date(e.when);
+    const tr = document.createElement("tr");
+    const a = document.createElement("td"); a.className = "num small";
+    a.textContent = when.toLocaleString("en-IN",{weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",timeZone:"Asia/Kolkata"});
+    const b = document.createElement("td");
+    const dot = document.createElement("span"); dot.className = "imp " + (e.impact === "high" ? "high" : "med");
+    b.append(dot, document.createTextNode(e.label));
+    const c = document.createElement("td"); c.className = "n small";
+    const diff = when.getTime() - now;
+    if (diff <= 0) c.textContent = "આજે થયું";
+    else { const dd = Math.floor(diff/864e5), hh = Math.floor(diff%864e5/36e5); c.textContent = dd ? dd+"d "+hh+"h" : hh+"h"; }
+    tr.append(a,b,c); t.append(tr);
+  });
+  if (data.eventsNote){
+    const tr = document.createElement("tr"); const td = document.createElement("td"); td.colSpan = 3; td.className = "small muted"; td.textContent = data.eventsNote; tr.append(td); t.append(tr);
+  }
+}
+
+function renderAll(){
+  const c = cur();
+  const sc = scoreAll(c);
+  renderHeader();
+  renderHero(c, sc);
+  renderLadder(c, sc);
+  renderPlan(c, sc);
+  renderImpact(c);
+  renderSpark(c);
+  lastScore = sc;
+}
+
+/* ---------------- LIVE FEED ---------------- */
+const XAG_URL = "https://api.gold-api.com/price/XAG";
+const INR_URL = "https://open.er-api.com/v6/latest/USD";
+const inArtifact = !!window.claude;
+let lastScore = null;
+const feed = { on: true, lastOk: 0, err: false, fails: 0, timer: null, inrAt: 0 };
+let ticks = [];
+try { const t = JSON.parse(localStorage.getItem("silverdesk:ticks")); if (Array.isArray(t)) ticks = t.filter(x => Date.now() - x.t < 6*36e5); } catch(e){}
+let alertsOn = false, audioCtx = null, prevPx = null;
+
+function renderFeed(){
+  const dot = $("feedDot"), txt = $("feedTxt");
+  if (!feed.on){ dot.className = "dot off"; txt.textContent = "Live બંધ (manual)"; return; }
+  if (feed.lastOk && !feed.err){
+    const s = Math.round((Date.now() - feed.lastOk)/1000);
+    dot.className = "dot pulse"; txt.textContent = "LIVE · " + (s < 5 ? "હમણાં" : s + " સેકન્ડ પહેલાં");
+  } else if (feed.err){
+    dot.className = "dot err";
+    txt.textContent = inArtifact ? "Live અહીં બંધ: file browser માં ખોલો" : "Live જોડાતું નથી, ફરી પ્રયાસ…";
+  } else { dot.className = "dot off"; txt.textContent = "Live: જોડાય છે…"; }
+}
+
+async function pullXag(){
+  if (!feed.on || document.hidden) return;
+  try{
+    const r = await fetch(XAG_URL, { cache: "no-store" });
+    if (!r.ok) throw new Error(r.status);
+    const j = await r.json();
+    if (typeof j.price !== "number" || !(j.price > 0)) throw new Error("bad");
+    feed.err = false; feed.fails = 0; feed.lastOk = Date.now();
+    onTick(j.price);
+  }catch(e){
+    feed.fails++; feed.err = true; renderFeed();
+  }
+}
+async function pullInr(){
+  if (!feed.on || live.inrManual) return;
+  if (Date.now() - feed.inrAt < 30*60e3) return;
+  try{
+    const r = await fetch(INR_URL, { cache: "no-store" });
+    const j = await r.json();
+    const v = j && j.rates && j.rates.INR;
+    if (v > 50 && v < 200){ feed.inrAt = Date.now(); live.inr = v; persistLive(); if (document.activeElement !== $("inInr")) $("inInr").value = v.toFixed(2); renderAll(); }
+  }catch(e){}
+}
+function persistLive(){ store.set("live",{base:data.updatedAt,v:live}); }
+
+function onTick(p){
+  live.xag = p; persistLive();
+  const last = ticks[ticks.length-1];
+  if (!last || last.p !== p || Date.now() - last.t > 55e3) ticks.push({ t: Date.now(), p });
+  if (ticks.length > 480) ticks = ticks.slice(-480);
+  try { localStorage.setItem("silverdesk:ticks", JSON.stringify(ticks)); } catch(e){}
+  if (document.activeElement !== $("inXag")) $("inXag").value = p.toFixed(2);
+  if (document.activeElement !== $("inMcx")) $("inMcx").value = Math.round(cur().mcx);
+  renderAll(); renderFeed();
+  checkAlerts(p);
+}
+
+function startFeed(){
+  clearInterval(feed.timer);
+  if (!feed.on){ renderFeed(); return; }
+  pullXag(); pullInr();
+  feed.timer = setInterval(()=>{ pullXag(); pullInr(); }, 30e3);
+}
+setInterval(renderFeed, 5e3);
+document.addEventListener("visibilitychange", ()=>{ if (!document.hidden && feed.on) pullXag(); });
+
+function renderSpark(c){
+  const cv = $("spark"); if (!cv) return;
+  const w = cv.clientWidth || 300, h = cv.clientHeight || 56, dpr = window.devicePixelRatio || 1;
+  cv.width = w*dpr; cv.height = h*dpr;
+  const g = cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,w,h);
+  const css = getComputedStyle(document.documentElement);
+  const pts = ticks.slice(-240);
+  if (pts.length < 2){
+    g.fillStyle = css.getPropertyValue("--muted").trim(); g.font = "12px " + css.getPropertyValue("--body");
+    g.fillText(feed.on ? "Live ticks આવે એટલે chart દેખાશે" : "Auto live ચાલુ કરો", 4, h/2+4);
+    $("sessHL").textContent = ""; return;
+  }
+  let lo = Math.min(...pts.map(x=>x.p)), hi = Math.max(...pts.map(x=>x.p));
+  if (hi - lo < 0.05){ hi += 0.025; lo -= 0.025; }
+  const X = i => 2 + i/(pts.length-1)*(w-8), Y = v => 4 + (hi-v)/(hi-lo)*(h-8);
+  const up = pts[pts.length-1].p >= pts[0].p;
+  const col = css.getPropertyValue(up ? "--buy" : "--sell").trim();
+  g.strokeStyle = css.getPropertyValue("--line").trim(); g.lineWidth = 1;
+  [0.25,0.5,0.75].forEach(f=>{ g.beginPath(); g.moveTo(0,h*f); g.lineTo(w,h*f); g.stroke(); });
+  g.beginPath(); pts.forEach((x,i)=> i ? g.lineTo(X(i),Y(x.p)) : g.moveTo(X(i),Y(x.p)));
+  g.strokeStyle = col; g.lineWidth = 2; g.stroke();
+  g.lineTo(X(pts.length-1), h); g.lineTo(X(0), h); g.closePath();
+  g.globalAlpha = 0.12; g.fillStyle = col; g.fill(); g.globalAlpha = 1;
+  g.beginPath(); g.arc(X(pts.length-1), Y(pts[pts.length-1].p), 3.5, 0, 7); g.fillStyle = col; g.fill();
+  $("sessHL").textContent = "H " + usdFmt(hi) + " · L " + usdFmt(lo);
+}
+
+/* ---------------- ALERTS ---------------- */
+function toast(msg){
+  const box = $("toasts");
+  const t = document.createElement("div"); t.className = "toast";
+  const s = document.createElement("span"); s.textContent = msg;
+  const b = document.createElement("button"); b.type = "button"; b.setAttribute("aria-label","બંધ કરો"); b.textContent = "×";
+  b.addEventListener("click", ()=>t.remove());
+  t.append(s,b); box.append(t);
+  setTimeout(()=>t.remove(), 20000);
+  while (box.children.length > 3) box.firstChild.remove();
+}
+function beep(){
+  if (!audioCtx) return;
+  try{
+    const o = audioCtx.createOscillator(), gn = audioCtx.createGain();
+    o.frequency.value = 880; gn.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+    gn.gain.exponentialRampToValueAtTime(0.2, audioCtx.currentTime + 0.02);
+    gn.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+    o.connect(gn).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + 0.55);
+  }catch(e){}
+}
+function checkAlerts(p){
+  const was = prevPx; prevPx = p;
+  if (!alertsOn || was === null || !lastScore) return;
+  const c = cur(), pd = lastScore.pd;
+  const levels = [["R1",pd.R1],["R2",pd.R2],["Pivot",pd.P],["S1",pd.S1],["S2",pd.S2]];
+  levels.forEach(([n,v])=>{
+    if (was < v && p >= v){ toast("⬆ XAG એ " + n + " " + usdFmt(v) + " (" + inrFmt(v*c.F) + ") ઉપર તોડ્યું"); beep(); }
+    else if (was > v && p <= v){ toast("⬇ XAG " + n + " " + usdFmt(v) + " (" + inrFmt(v*c.F) + ") નીચે ગયું"); beep(); }
+  });
+}
+function renderAlertBtn(){
+  const b = $("alertBtn"); b.textContent = alertsOn ? "🔔 Alerts ચાલુ" : "🔔 Alerts બંધ"; b.classList.toggle("on", alertsOn);
+}
+$("alertBtn").addEventListener("click", ()=>{
+  alertsOn = !alertsOn;
+  if (alertsOn){
+    try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); audioCtx.resume(); } catch(e){}
+    beep(); toast("Alerts ચાલુ: ભાવ R1, R2, Pivot, S1, S2 પાર કરશે ત્યારે અવાજ સાથે સૂચના મળશે. Page ખુલ્લું રાખો.");
+  }
+  store.set("alerts", alertsOn); renderAlertBtn();
+});
+$("autoLive").addEventListener("change", ()=>{
+  feed.on = $("autoLive").checked; store.set("feed", feed.on);
+  if (!feed.on) feed.lastOk = 0;
+  startFeed(); renderAll();
+});
+
+function syncSeg(){
+  document.querySelectorAll("[data-tf]").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.tf===tf)));
+  document.querySelectorAll("[data-unit]").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.unit===unit)));
+}
+
+function full(){
+  loadLocal(); syncSeg(); renderInputs(); renderDrivers(); renderNews(); renderAll();
+}
+
+// events
+$("applyBtn").addEventListener("click", ()=>{
+  const x = parseFloat($("inXag").value), i = parseFloat($("inInr").value), m = parseFloat($("inMcx").value);
+  const c0 = cur();
+  const before = Math.round(c0.mcx);
+  const next = { k: live.k, inr: live.inr, inrManual: live.inrManual };
+  if (x > 0) next.xag = x;
+  if (i > 0 && Math.abs(i - c0.inr) > 0.001) { next.inr = i; next.inrManual = true; }
+  // MCX typed by the user (changed from what was shown) recalibrates the premium factor
+  if (m > 0 && Math.abs(m - before) >= 1) next.k = m / ((next.xag || data.xag) * (next.inr || data.inr) * OZ);
+  live = next;
+  store.set("live",{base:data.updatedAt,v:live});
+  renderInputs(); renderAll();
+});
+$("resetBtn").addEventListener("click", ()=>{
+  live = {}; hlc = {}; drvOverride = {};
+  store.set("live",null); store.set("hlc",null); store.set("drv",null);
+  $("sX").value = 0; $("sI").value = 0;
+  full();
+});
+["inXag","inInr","inMcx"].forEach(id => $(id).addEventListener("keydown", e => { if (e.key === "Enter") $("applyBtn").click(); }));
+[["dH","day","h"],["dL","day","l"],["dC","day","c"],["wH","week","h"],["wL","week","l"],["wC","week","c"]].forEach(([id,w,f])=>{
+  $(id).addEventListener("change", ()=>{
+    const v = parseFloat($(id).value);
+    hlc[w] = hlc[w] || {};
+    if (v > 0) hlc[w][f] = v; else delete hlc[w][f];
+    store.set("hlc",{base:data.updatedAt,v:hlc});
+    renderAll();
+  });
+});
+document.querySelectorAll("[data-tf]").forEach(b=>b.addEventListener("click",()=>{ tf=b.dataset.tf; store.set("tf",tf); syncSeg(); renderAll(); }));
+document.querySelectorAll("[data-unit]").forEach(b=>b.addEventListener("click",()=>{ unit=b.dataset.unit; store.set("unit",unit); syncSeg(); renderAll(); }));
+$("sX").addEventListener("input", ()=>renderImpact(cur()));
+$("sI").addEventListener("input", ()=>renderImpact(cur()));
+window.addEventListener("resize", ()=>renderAll());
+
+/* ---------------- THEME ---------------- */
+function applyTheme(t){
+  document.documentElement.setAttribute("data-theme", t);
+  $("themeBtn").textContent = t === "dark" ? "☀️ Light" : "🌙 Dark";
+  renderSpark(cur());
+}
+{
+  const saved = store.get("theme");
+  if (saved === "dark" || saved === "light") applyTheme(saved);
+  else if (!inArtifact) applyTheme("dark");
+  else $("themeBtn").textContent = document.documentElement.getAttribute("data-theme") === "dark" ? "☀️ Light" : "🌙 Dark";
+}
+$("themeBtn").addEventListener("click", ()=>{
+  const isDark = document.documentElement.getAttribute("data-theme") === "dark" ||
+    (!document.documentElement.hasAttribute("data-theme") && matchMedia("(prefers-color-scheme: dark)").matches);
+  const t = isDark ? "light" : "dark";
+  store.set("theme", t); applyTheme(t);
+});
+
+full();
+{ const f = store.get("feed"); feed.on = f === null ? true : !!f; $("autoLive").checked = feed.on; }
+renderAlertBtn();
+startFeed();
+
+// Auto-refreshed data from the artifact database (written by the scheduled refresh)
+(async ()=>{
+  try{
+    const db = await window.claude?.use?.("db");
+    if (!db) return;
+    db.doc("market/latest").onSnapshot(snap=>{
+      if (!snap.exists) return;
+      const d = snap.data();
+      if (!d || typeof d.xag !== "number" || !d.day || !d.week) return;
+      if (new Date(d.updatedAt) < new Date(SNAPSHOT.updatedAt)) return;
+      data = Object.assign({}, SNAPSHOT, d);
+      source = "db";
+      full();
+    }, ()=>{});
+  }catch(e){}
+})();
+})();
+</script>
+</body></html>
